@@ -1073,8 +1073,11 @@ execute_with_timeout() {
   fi
 
   # Run command in background and capture output (stdout and stderr combined)
+  # Sanitize hook Git environment so provider subprocesses never inherit locked index/tree state.
   (
-    "$@" > "$output_file" 2>&1
+    env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_PREFIX \
+      -u GIT_COMMON_DIR -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES -u GIT_QUARANTINE_PATH \
+      "$@" > "$output_file" 2>&1
     echo $? > "$exit_code_file"
   ) &
   local cmd_pid=$!

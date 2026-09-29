@@ -148,6 +148,48 @@ Describe 'execute_with_timeout()'
       The output should include "(provider returned no output)"
     End
   End
+
+  Describe 'git environment sanitization'
+    setup_git_env() {
+      export CI=true
+      export GGA_NO_SPINNER=1
+      export GIT_DIR="/hook/git/dir"
+      export GIT_INDEX_FILE="/hook/index"
+      export GIT_WORK_TREE="/hook/wt"
+      export GIT_PREFIX="sub/"
+      export GIT_COMMON_DIR="/hook/common"
+      export GIT_OBJECT_DIRECTORY="/hook/obj"
+      export GIT_ALTERNATE_OBJECT_DIRECTORIES="/hook/alt"
+      export GIT_QUARANTINE_PATH="/hook/quarantine"
+    }
+    Before 'setup_git_env'
+
+    cleanup_git_env() {
+      unset GIT_DIR
+      unset GIT_INDEX_FILE
+      unset GIT_WORK_TREE
+      unset GIT_PREFIX
+      unset GIT_COMMON_DIR
+      unset GIT_OBJECT_DIRECTORY
+      unset GIT_ALTERNATE_OBJECT_DIRECTORIES
+      unset GIT_QUARANTINE_PATH
+    }
+    After 'cleanup_git_env'
+
+    It 'sanitizes hook GIT_* environment variables from child command'
+      When call execute_with_timeout 5 "TestProvider" bash -c 'env | grep "^GIT_" || echo "CLEAN"'
+      The status should eq 0
+      The output should include "CLEAN"
+      The output should not include "GIT_DIR="
+      The output should not include "GIT_INDEX_FILE="
+      The output should not include "GIT_WORK_TREE="
+      The output should not include "GIT_PREFIX="
+      The output should not include "GIT_COMMON_DIR="
+      The output should not include "GIT_OBJECT_DIRECTORY="
+      The output should not include "GIT_ALTERNATE_OBJECT_DIRECTORIES="
+      The output should not include "GIT_QUARANTINE_PATH="
+    End
+  End
 End
 
 Describe 'execute_provider_with_timeout()'
